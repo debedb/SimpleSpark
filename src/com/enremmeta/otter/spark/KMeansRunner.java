@@ -9,7 +9,7 @@ import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
-public class KMeansRunner implements Constants {
+public class KMeansRunner extends ServiceRunner implements Constants {
 
     private static final class ParsingMapper implements
 	    Function<String, Vector> {
@@ -17,33 +17,55 @@ public class KMeansRunner implements Constants {
 	public Vector call(String s) throws Exception {
 	    String[] sarray = s.split(DEFAULT_DELIMITER);
 	    double[] values = new double[sarray.length];
-	    for (int i = 0; i < sarray.length; i++)
+	    for (int i = 0; i < sarray.length; i++) {
 		values[i] = Double.parseDouble(sarray[i]);
+	    }
 	    return Vectors.dense(values);
 	}
 
     };
 
-    public static void main(String[] args) {
+    public KMeansRunner(String[] argv) throws Exception {
+	super();
+	getOpts().addOption("-f", true, "HDFS file");
+	getOpts().addOption("-c", true, "Cluster count");
+	getOpts().addOption("-m", true, "Max iterations");
+	parseCommandLineArgs(argv);
+	this.file = getCl().getOptionValue('f');
+	this.clusterCount = Integer.parseInt(getCl().getOptionValue('c'));
+	this.maxIterations = Integer.parseInt(getCl().getOptionValue('m'));
+
+    }
+
+    private int clusterCount;
+    private int maxIterations;
+    private String file;
+
+    public static final String HDFS_PREFIX = "hdfs://ip-10-51-152-144.ec2.internal/user/impala/x5_2/";
+
+    public void runKmeans() {
 
 	SparkConf conf = new SparkConf().setAppName("K-means Example");
 	JavaSparkContext sc = new JavaSparkContext(conf);
 
 	// Load and parse data
-	String path = "data/mllib/kmeans_data.txt";
+	String path = HDFS_PREFIX + file;
 	JavaRDD<String> data = sc.textFile(path);
 	JavaRDD<Vector> parsedData = data.map(new ParsingMapper());
 
-	// Cluster the data into two classes using KMeansRunner
-	int numClusters = 2;
-	int numIterations = 20;
 	KMeansModel clusters = KMeans.train(
 					    parsedData.rdd(),
-					    numClusters,
-					    numIterations);
+					    clusterCount,
+					    maxIterations);
 
 	// Evaluate clustering by computing Within Set Sum of Squared Errors
 	double WSSSE = clusters.computeCost(parsedData.rdd());
 	System.out.println("Within Set Sum of Squared Errors = " + WSSSE);
+    }
+
+    public static void main(String[] args) throws Exception {
+	KMeansRunner runner = new KMeansRunner(args);
+	runner.runKmeans();
+
     }
 }
