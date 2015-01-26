@@ -119,6 +119,7 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	if (outFile.startsWith("hdfs:")) {
 	    pathOut = HDFS_PREFIX + outFile;
 	}
+	System.out.println("SAVING: " + pathOut);
 	outRdd.saveAsTextFile(pathOut);
 	System.out.println("Wrote " + pathOut);
 	double WSSSE = clusters.computeCost(parsedData.rdd());
