@@ -116,7 +116,7 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	RDD<Vector> outRdd = sc.sc().makeRDD(seq, clusterCount, tag);
 
 	String pathOut = outFile;
-	if (outFile.startsWith("hdfs:")) {
+	if (!outFile.startsWith("hdfs:")) {
 	    pathOut = HDFS_PREFIX + outFile;
 	}
 	System.out.println("SAVING: " + pathOut);
