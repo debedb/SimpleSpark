@@ -27,9 +27,9 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 
     public KMeansRunner(String[] argv) throws Exception {
 	super();
-	getOpts().addOption("-f", true, "HDFS file");
-	getOpts().addOption("-c", true, "Cluster count");
-	getOpts().addOption("-m", true, "Max iterations");
+	getOpts().addOption("f", true, "HDFS file");
+	getOpts().addOption("c", true, "Cluster count");
+	getOpts().addOption("m", true, "Max iterations");
 	parseCommandLineArgs(argv);
 	this.file = getCl().getOptionValue('f');
 	this.clusterCount = Integer.parseInt(getCl().getOptionValue('c'));
