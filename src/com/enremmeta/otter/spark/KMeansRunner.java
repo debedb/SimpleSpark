@@ -20,28 +20,43 @@ import scala.reflect.ClassTag;
 
 public class KMeansRunner extends ServiceRunner implements Constants {
 
-    private static final class ParsingMapper implements
+    private final class ParsingMapper implements
 	    Function<String, Vector> {
 
 	public Vector call(String s) throws Exception {
 	    String[] sarray = s.split(DEFAULT_DELIMITER);
-	    double[] values = new double[sarray.length];
-	    for (int i = 0; i < sarray.length; i++) {
-		values[i] = Double.parseDouble(sarray[i]);
+	    double[] values = new double[KMeansRunner.this.fields.length];
+	    for (int i = 0; i < KMeansRunner.this.fields.length; i++) {
+		int idx = KMeansRunner.this.fields[i];
+		values[i] = Double.parseDouble(sarray[idx]);
 	    }
 	    return Vectors.dense(values);
 	}
 
     };
 
+    private int[] fields;
+    
     public KMeansRunner(String[] argv) throws Exception {
 	super();
 	getOpts().addOption("i", true, "Input - HDFS file");
 	getOpts().addOption("o", true, "Output - HDFS file");
 	getOpts().addOption("c", true, "Cluster count");
 	getOpts().addOption("m", true, "Max iterations");
+	getOpts().addOption("f", true, "Fields");
 	parseCommandLineArgs(argv);
 	this.inFile = getCl().getOptionValue('i');
+
+	this.outFile = getCl().getOptionValue('o');
+	
+	String fieldArg = getCl().getOptionValue('f');
+	String[] fieldStr = fieldArg.split(",");
+	
+	fields = new int[fieldStr.length];
+	for (int i = 0; i < fieldStr.length; i++) {
+	    fields[i] = Integer.valueOf(fieldStr[i]);
+	}
+	
 	String clusterCountStr = getCl().getOptionValue('c');
 	if (clusterCountStr == null) {
 	    clusterCountStr = "2";
@@ -87,7 +102,7 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	RDD<Vector> outRdd = sc.sc().makeRDD(seq, clusterCount, tag);
 	String pathOut = HDFS_PREFIX + outFile;
 	outRdd.saveAsTextFile(pathOut);
-
+	System.out.println("Wrote " + pathOut);
 	double WSSSE = clusters.computeCost(parsedData.rdd());
 	System.out.println("Within Set Sum of Squared Errors = " + WSSSE);
     }
