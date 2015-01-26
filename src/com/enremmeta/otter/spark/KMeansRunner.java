@@ -20,14 +20,20 @@ import scala.reflect.ClassTag;
 
 public class KMeansRunner extends ServiceRunner implements Constants {
 
-    private final class ParsingMapper implements
+    private final static class ParsingMapper implements
 	    Function<String, Vector> {
 
+	private int[] fields;
+	
+	public ParsingMapper(int[] fields) {
+	    this.fields = fields;
+	}
+	
 	public Vector call(String s) throws Exception {
 	    String[] sarray = s.split(DEFAULT_DELIMITER);
-	    double[] values = new double[KMeansRunner.this.fields.length];
-	    for (int i = 0; i < KMeansRunner.this.fields.length; i++) {
-		int idx = KMeansRunner.this.fields[i];
+	    double[] values = new double[fields.length];
+	    for (int i = 0; i < fields.length; i++) {
+		int idx = fields[i];
 		values[i] = Double.parseDouble(sarray[idx]);
 	    }
 	    return Vectors.dense(values);
@@ -85,7 +91,8 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	// Load and parse data
 	String path = HDFS_PREFIX + inFile;
 	JavaRDD<String> data = sc.textFile(path);
-	JavaRDD<Vector> parsedData = data.map(new ParsingMapper());
+	
+	JavaRDD<Vector> parsedData = data.map(new ParsingMapper(this.fields));
 
 	KMeansModel clusters = KMeans.train(
 					    parsedData.rdd(),
