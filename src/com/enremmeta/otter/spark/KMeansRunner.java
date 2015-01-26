@@ -24,13 +24,16 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	    Function<String, Vector> {
 
 	private int[] fields;
-	
+
 	public ParsingMapper(int[] fields) {
 	    this.fields = fields;
 	}
-	
+
 	public Vector call(String s) throws Exception {
 	    String[] sarray = s.split(DEFAULT_DELIMITER);
+
+	    System.out.println("Splitting " + s + " on " + DEFAULT_DELIMITER
+		    + ": " + sarray.length);
 	    double[] values = new double[fields.length];
 	    for (int i = 0; i < fields.length; i++) {
 		int idx = fields[i];
@@ -42,7 +45,7 @@ public class KMeansRunner extends ServiceRunner implements Constants {
     };
 
     private int[] fields;
-    
+
     public KMeansRunner(String[] argv) throws Exception {
 	super();
 	getOpts().addOption("i", true, "Input - HDFS file");
@@ -54,15 +57,15 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	this.inFile = getCl().getOptionValue('i');
 
 	this.outFile = getCl().getOptionValue('o');
-	
+
 	String fieldArg = getCl().getOptionValue('f');
 	String[] fieldStr = fieldArg.split(",");
-	
+
 	fields = new int[fieldStr.length];
 	for (int i = 0; i < fieldStr.length; i++) {
 	    fields[i] = Integer.valueOf(fieldStr[i]);
 	}
-	
+
 	String clusterCountStr = getCl().getOptionValue('c');
 	if (clusterCountStr == null) {
 	    clusterCountStr = "2";
@@ -89,13 +92,13 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	JavaSparkContext sc = new JavaSparkContext(conf);
 
 	// Load and parse data
-	String path =  inFile;
+	String path = inFile;
 
 	if (!inFile.startsWith("hdfs:")) {
 	    path = HDFS_PREFIX + inFile;
 	}
 	JavaRDD<String> data = sc.textFile(path);
-	
+
 	JavaRDD<Vector> parsedData = data.map(new ParsingMapper(this.fields));
 
 	KMeansModel clusters = KMeans.train(
@@ -111,10 +114,10 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	ClassTag<Vector> tag = scala.reflect.ClassTag$.MODULE$
 		.apply(Vector.class);
 	RDD<Vector> outRdd = sc.sc().makeRDD(seq, clusterCount, tag);
-	
+
 	String pathOut = outFile;
 	if (outFile.startsWith("hdfs:")) {
-	    pathOut= HDFS_PREFIX + outFile;
+	    pathOut = HDFS_PREFIX + outFile;
 	}
 	outRdd.saveAsTextFile(pathOut);
 	System.out.println("Wrote " + pathOut);
