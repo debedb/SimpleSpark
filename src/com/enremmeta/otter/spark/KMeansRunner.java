@@ -32,8 +32,17 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	getOpts().addOption("m", true, "Max iterations");
 	parseCommandLineArgs(argv);
 	this.file = getCl().getOptionValue('f');
-	this.clusterCount = Integer.parseInt(getCl().getOptionValue('c'));
-	this.maxIterations = Integer.parseInt(getCl().getOptionValue('m'));
+	String clusterCountStr = getCl().getOptionValue('c');
+	if (clusterCountStr == null) {
+	    clusterCountStr = "2";
+	}
+	this.clusterCount = Integer.parseInt(clusterCountStr);
+	
+	String maxIterationsStr = getCl().getOptionValue('m');
+	if (maxIterationsStr == null) {
+	    maxIterationsStr = "50";
+	}
+	this.maxIterations = Integer.parseInt(maxIterationsStr);
 
     }
 
