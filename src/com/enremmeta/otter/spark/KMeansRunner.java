@@ -89,7 +89,11 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	JavaSparkContext sc = new JavaSparkContext(conf);
 
 	// Load and parse data
-	String path = HDFS_PREFIX + inFile;
+	String path =  inFile;
+
+	if (!inFile.startsWith("hdfs:")) {
+	    path = HDFS_PREFIX + inFile;
+	}
 	JavaRDD<String> data = sc.textFile(path);
 	
 	JavaRDD<Vector> parsedData = data.map(new ParsingMapper(this.fields));
@@ -107,7 +111,11 @@ public class KMeansRunner extends ServiceRunner implements Constants {
 	ClassTag<Vector> tag = scala.reflect.ClassTag$.MODULE$
 		.apply(Vector.class);
 	RDD<Vector> outRdd = sc.sc().makeRDD(seq, clusterCount, tag);
-	String pathOut = HDFS_PREFIX + outFile;
+	
+	String pathOut = outFile;
+	if (outFile.startsWith("hdfs:")) {
+	    pathOut= HDFS_PREFIX + outFile;
+	}
 	outRdd.saveAsTextFile(pathOut);
 	System.out.println("Wrote " + pathOut);
 	double WSSSE = clusters.computeCost(parsedData.rdd());
