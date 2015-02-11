@@ -1,0 +1,3 @@
+#!/bin/sh
+export 
+java -cp "jars/*" -Dspark.master=spark://${SPARK_MASTER_IP}:${SPARK_MASTER_PORT} com.enremmeta.otter.spark.KMeansRunner $*

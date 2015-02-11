@@ -1,0 +1,3 @@
+#!/bin/sh
+rm -rf jars/*
+mvn -e -X clean dependency:copy-dependencies package
